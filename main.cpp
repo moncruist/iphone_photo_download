@@ -1,34 +1,32 @@
+// iPhone photo download
+// Copyright (C) 2020 Konstantin Zhukov
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <iostream>
 #include <iomanip>
 #include <libusb.h>
 
+#include "usb_context.h"
+
 int main() {
-    libusb_device **devs;
-    libusb_context *ctx = nullptr;
-    int ret = 0;
-    ret = libusb_init(&ctx);
-    if (ret < 0) {
-        std::cout << "Init error: " << ret << std::endl;
-        return 1;
-    }
+    UsbContext context(false);
+    auto devices = context.enumerate_devices().value();
 
-    libusb_set_debug(ctx, 3);
+    for (size_t i = 0; i < devices.size(); i++) {
+        auto device = devices[i];
 
-    auto count = libusb_get_device_list(ctx, &devs);
-    if (count < 0) {
-        std::cout << "Get device error" << std::endl;
-        libusb_exit(ctx);
-        return 1;
-    }
-
-    for (ssize_t i = 0; i < count; i++) {
-        libusb_device *dev = devs[i];
-        libusb_device_descriptor desc;
-
-        if (libusb_get_device_descriptor(dev, &desc) < 0) {
-            std::cout << "Failed to get device descriptor" << std::endl;
-            continue;
-        }
+        auto desc = device.get_descriptor().value();
 
         std::cout << "Config nums: " << static_cast<int>(desc.bNumConfigurations) << std::endl;
         std::cout << "Device class: " << static_cast<int>(desc.bDeviceClass) << std::endl;
@@ -36,9 +34,6 @@ int main() {
         std::cout << "Product ID: " << std::setw(4) << std::setfill('0') << std::hex << desc.idProduct << std::endl;
         std::cout << std::endl;
     }
-
-    libusb_free_device_list(devs, 1);
-    libusb_exit(ctx);
 
     return 0;
 }
