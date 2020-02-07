@@ -23,7 +23,7 @@
 
 class UsbDeviceList {
 public:
-    explicit UsbDeviceList(libusb_context* context);
+    explicit UsbDeviceList(libusb_context& context);
     UsbDeviceList(UsbDeviceList&& other);
     ~UsbDeviceList();
 

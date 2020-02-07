@@ -18,9 +18,9 @@
 
 #include <iostream>
 
-UsbDeviceList::UsbDeviceList(libusb_context* context)
+UsbDeviceList::UsbDeviceList(libusb_context& context)
 {
-    ssize_t cnt = libusb_get_device_list(context, &devices_);
+    ssize_t cnt = libusb_get_device_list(&context, &devices_);
     if (cnt < 0) {
         std::cout << "Failed to enumerate devices: " << libusb_error_name(cnt) << std::endl;
         devices_ = nullptr;
@@ -52,5 +52,5 @@ size_t UsbDeviceList::size() const
 
 UsbDevice UsbDeviceList::operator[](size_t idx)
 {
-    return UsbDevice(devices_[idx]);
+    return UsbDevice(*devices_[idx]);
 }

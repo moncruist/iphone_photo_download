@@ -43,5 +43,5 @@ std::optional<UsbDeviceList> UsbContext::enumerate_devices() const
         return std::nullopt;
     }
 
-    return UsbDeviceList(ctx_);
+    return UsbDeviceList(*ctx_);
 }

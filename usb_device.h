@@ -22,12 +22,23 @@
 
 class UsbDevice {
 public:
-    explicit UsbDevice(libusb_device* device);
+    explicit UsbDevice(libusb_device& device);
+    UsbDevice(const UsbDevice& other);
+    UsbDevice(UsbDevice&& other);
+    ~UsbDevice();
+
+    UsbDevice& operator=(const UsbDevice& other);
+    UsbDevice& operator=(UsbDevice&& other);
 
     std::optional<libusb_device_descriptor> get_descriptor() const;
 
+    bool open();
+    bool close();
+    bool is_open();
+
 private:
     libusb_device* device_{nullptr};
+    libusb_device_handle* handle_{nullptr};
 };
 
 #endif //IPHONE_PHOTO_DOWNLOAD_USB_DEVICE_H
