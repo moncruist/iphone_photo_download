@@ -19,7 +19,6 @@
 
 #include <cstdint>
 #include <libusb.h>
-#include "usb_device.h"
 
 class UsbDeviceList {
 public:
@@ -28,7 +27,7 @@ public:
     ~UsbDeviceList();
 
     size_t size() const;
-    UsbDevice operator[](size_t idx);
+    libusb_device* operator[](size_t idx);
 
 private:
     libusb_device** devices_{nullptr};

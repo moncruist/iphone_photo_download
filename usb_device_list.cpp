@@ -50,7 +50,7 @@ size_t UsbDeviceList::size() const
     return size_;
 }
 
-UsbDevice UsbDeviceList::operator[](size_t idx)
+libusb_device* UsbDeviceList::operator[](size_t idx)
 {
-    return UsbDevice(*devices_[idx]);
+    return devices_[idx];
 }

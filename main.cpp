@@ -18,6 +18,7 @@
 #include <libusb.h>
 
 #include "usb_context.h"
+#include "ptp.h"
 
 int main() {
     UsbContext context(false);
@@ -26,12 +27,19 @@ int main() {
     for (size_t i = 0; i < devices.size(); i++) {
         auto device = devices[i];
 
-        auto desc = device.get_descriptor().value();
+        libusb_device_descriptor desc;
+        int ret = libusb_get_device_descriptor(device, &desc);
+        if (ret < 0) {
+            std::cerr << "Failed to get descriptor: " << libusb_error_name(ret) << std::endl;
+            continue;
+        }
+
 
         std::cout << "Config nums: " << static_cast<int>(desc.bNumConfigurations) << std::endl;
         std::cout << "Device class: " << static_cast<int>(desc.bDeviceClass) << std::endl;
         std::cout << "Vendor ID: " << std::setw(4) << std::setfill('0') << std::hex << desc.idVendor << std::endl;
         std::cout << "Product ID: " << std::setw(4) << std::setfill('0') << std::hex << desc.idProduct << std::endl;
+        std::cout << "PTP supported: " << Ptp::support_ptp(device) << std::endl;
         std::cout << std::endl;
     }
 

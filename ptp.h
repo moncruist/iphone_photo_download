@@ -13,32 +13,22 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-#ifndef IPHONE_PHOTO_DOWNLOAD_USB_DEVICE_H
-#define IPHONE_PHOTO_DOWNLOAD_USB_DEVICE_H
+#ifndef IPHONE_PHOTO_DOWNLOAD_PTP_H
+#define IPHONE_PHOTO_DOWNLOAD_PTP_H
 
 #include <libusb.h>
-#include <optional>
 
-class UsbDevice {
+class Ptp
+{
 public:
-    explicit UsbDevice(libusb_device& device);
-    UsbDevice(const UsbDevice& other);
-    UsbDevice(UsbDevice&& other);
-    ~UsbDevice();
+    Ptp();
 
-    UsbDevice& operator=(const UsbDevice& other);
-    UsbDevice& operator=(UsbDevice&& other);
-
-    std::optional<libusb_device_descriptor> get_descriptor() const;
-
-    bool open();
-    bool close();
-    bool is_open();
+    static bool support_ptp(libusb_device* device);
 
 private:
-    libusb_device* device_{nullptr};
-    libusb_device_handle* handle_{nullptr};
+    static constexpr uint8_t CAPTURE_DEVICE_INTERFACE = 0x06;
+    static constexpr uint8_t STILL_IMAGE_SUBCLASS = 0x01;
+    static constexpr uint8_t PTP_PROTOCOL = 0x01;
 };
 
-#endif //IPHONE_PHOTO_DOWNLOAD_USB_DEVICE_H
+#endif // IPHONE_PHOTO_DOWNLOAD_PTP_H
