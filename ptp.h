@@ -18,14 +18,15 @@
 
 #include <libusb.h>
 
-class Ptp
-{
+class Ptp {
 public:
     Ptp();
 
     static bool support_ptp(libusb_device* device);
 
 private:
+    static bool find_interface(libusb_config_descriptor* config);
+
     static constexpr uint8_t CAPTURE_DEVICE_INTERFACE = 0x06;
     static constexpr uint8_t STILL_IMAGE_SUBCLASS = 0x01;
     static constexpr uint8_t PTP_PROTOCOL = 0x01;

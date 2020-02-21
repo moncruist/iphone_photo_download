@@ -39,7 +39,7 @@ int main() {
         std::cout << "Device class: " << static_cast<int>(desc.bDeviceClass) << std::endl;
         std::cout << "Vendor ID: " << std::setw(4) << std::setfill('0') << std::hex << desc.idVendor << std::endl;
         std::cout << "Product ID: " << std::setw(4) << std::setfill('0') << std::hex << desc.idProduct << std::endl;
-        std::cout << "PTP supported: " << Ptp::support_ptp(device) << std::endl;
+        std::cout << "PTP supported: " << std::boolalpha << Ptp::support_ptp(device) << std::endl;
         std::cout << std::endl;
     }
 

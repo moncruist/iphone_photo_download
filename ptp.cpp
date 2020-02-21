@@ -15,51 +15,35 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "ptp.h"
 
+#include <algorithm>
 #include <iostream>
 
-Ptp::Ptp()
-{
+Ptp::Ptp() {}
 
-}
-
-bool Ptp::support_ptp(libusb_device* device)
-{
+bool Ptp::support_ptp(libusb_device* device) {
     if (!device) {
         return false;
     }
 
     libusb_device_descriptor desc;
     int ret = libusb_get_device_descriptor(device, &desc);
-    if (ret<0) {
+    if (ret < 0) {
         std::cerr << "Failed to get descriptor: " << libusb_error_name(ret) << std::endl;
         return false;
     }
 
     bool supported = false;
 
-    for (uint8_t i = 0; i<desc.bNumConfigurations; i++) {
+    for (uint8_t i = 0; i < desc.bNumConfigurations; i++) {
         libusb_config_descriptor* conf;
 
         ret = libusb_get_config_descriptor(device, i, &conf);
-        if (ret!=0) {
+        if (ret != 0) {
             continue;
         }
 
-        for (uint8_t j = 0; j<conf->bNumInterfaces; j++) {
-            const libusb_interface& interface = conf->interface[j];
+        supported = find_interface(conf);
 
-            for (uint8_t k = 0; k<interface.num_altsetting; k++) {
-                const libusb_interface_descriptor& if_desc = interface.altsetting[k];
-                if (if_desc.bInterfaceClass==CAPTURE_DEVICE_INTERFACE
-                        && if_desc.bInterfaceSubClass==STILL_IMAGE_SUBCLASS
-                        && if_desc.bInterfaceProtocol==PTP_PROTOCOL) {
-                    supported = true;
-                    goto loop_end;
-                }
-            }
-        }
-
-        loop_end:
         libusb_free_config_descriptor(conf);
         if (supported) {
             return true;
@@ -67,4 +51,18 @@ bool Ptp::support_ptp(libusb_device* device)
     }
 
     return false;
+}
+
+bool Ptp::find_interface(libusb_config_descriptor* config) {
+    return std::find_if(&config->interface[0],
+                        &config->interface[config->bNumInterfaces],
+                        [&](const libusb_interface& interface) -> bool {
+                            return std::find_if(&interface.altsetting[0],
+                                                &interface.altsetting[interface.num_altsetting],
+                                                [&](const libusb_interface_descriptor& if_desc) -> bool {
+                                                    return if_desc.bInterfaceClass == CAPTURE_DEVICE_INTERFACE &&
+                                                           if_desc.bInterfaceSubClass == STILL_IMAGE_SUBCLASS &&
+                                                           if_desc.bInterfaceProtocol == PTP_PROTOCOL;
+                                                }) != &interface.altsetting[interface.num_altsetting];
+                        }) != &config->interface[config->bNumInterfaces];
 }
