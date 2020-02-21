@@ -37,8 +37,7 @@ UsbContext::~UsbContext() {
     }
 }
 
-std::optional<UsbDeviceList> UsbContext::enumerate_devices() const
-{
+std::optional<UsbDeviceList> UsbContext::enumerate_devices() const {
     if (!ctx_) {
         return std::nullopt;
     }

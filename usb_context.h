@@ -17,10 +17,10 @@
 #ifndef IPHONE_PHOTO_DOWNLOAD_USB_CONTEXT_H
 #define IPHONE_PHOTO_DOWNLOAD_USB_CONTEXT_H
 
+#include "usb_device_list.h"
+
 #include <libusb.h>
 #include <optional>
-
-#include "usb_device_list.h"
 
 class UsbContext {
 public:
@@ -30,8 +30,8 @@ public:
     std::optional<UsbDeviceList> enumerate_devices() const;
 
 private:
-    libusb_context *ctx_{nullptr};
+    libusb_context* ctx_ {nullptr};
 };
 
 
-#endif //IPHONE_PHOTO_DOWNLOAD_USB_CONTEXT_H
+#endif // IPHONE_PHOTO_DOWNLOAD_USB_CONTEXT_H

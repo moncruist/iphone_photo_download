@@ -30,8 +30,8 @@ public:
     libusb_device* operator[](size_t idx);
 
 private:
-    libusb_device** devices_{nullptr};
-    size_t size_{0};
+    libusb_device** devices_ {nullptr};
+    size_t size_ {0};
 };
 
-#endif //IPHONE_PHOTO_DOWNLOAD_USB_DEVICE_LIST_H
+#endif // IPHONE_PHOTO_DOWNLOAD_USB_DEVICE_LIST_H

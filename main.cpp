@@ -13,12 +13,12 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#include <iostream>
-#include <iomanip>
-#include <libusb.h>
-
-#include "usb_context.h"
 #include "ptp.h"
+#include "usb_context.h"
+
+#include <iomanip>
+#include <iostream>
+#include <libusb.h>
 
 int main() {
     UsbContext context(false);
