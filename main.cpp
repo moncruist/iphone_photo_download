@@ -13,35 +13,34 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#include "ptp.h"
-#include "usb_context.h"
-
 #include <iomanip>
 #include <iostream>
-#include <libusb.h>
 
-int main() {
-    UsbContext context(false);
-    auto devices = context.enumerate_devices().value();
+#include "app.h"
 
-    for (size_t i = 0; i < devices.size(); i++) {
-        auto device = devices[i];
+#include <boost/program_options.hpp>
 
-        libusb_device_descriptor desc;
-        int ret = libusb_get_device_descriptor(device, &desc);
-        if (ret < 0) {
-            std::cerr << "Failed to get descriptor: " << libusb_error_name(ret) << std::endl;
-            continue;
-        }
+namespace po = boost::program_options;
 
+int main(int argc, char *argv[]) {
+    po::options_description desc("All options");
+    desc.add_options()("command", po::value<std::string>()->required(), "Command")("help", "produce help message");
 
-        std::cout << "Config nums: " << static_cast<int>(desc.bNumConfigurations) << std::endl;
-        std::cout << "Device class: " << static_cast<int>(desc.bDeviceClass) << std::endl;
-        std::cout << "Vendor ID: " << std::setw(4) << std::setfill('0') << std::hex << desc.idVendor << std::endl;
-        std::cout << "Product ID: " << std::setw(4) << std::setfill('0') << std::hex << desc.idProduct << std::endl;
-        std::cout << "PTP supported: " << std::boolalpha << Ptp::support_ptp(device) << std::endl;
-        std::cout << std::endl;
+    po::positional_options_description positional;
+    positional.add("command", 1);
+
+    po::variables_map vm;
+    po::store(po::command_line_parser(argc, argv).options(desc).positional(positional).run(), vm);
+    po::notify(vm);
+
+    if (vm.count("help")) {
+        std::cout << desc << std::endl;
+        return 0;
     }
+
+    App app;
+
+    app.print_device_list();
 
     return 0;
 }

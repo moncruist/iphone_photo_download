@@ -3,19 +3,22 @@ project(iphone_photo_download)
 
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(PkgConfig REQUIRED)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
 
-pkg_check_modules(USB REQUIRED IMPORTED_TARGET libusb-1.0)
+find_package(PkgConfig REQUIRED)
+find_package(Gphoto2 REQUIRED)
+find_package(Boost COMPONENTS program_options REQUIRED)
 
 add_executable(iphone_photo_download
-    usb_device_list.h
-    usb_context.h
-    ptp.h
+    app.h
 
     main.cpp
-    usb_context.cpp
-    usb_device_list.cpp
-    ptp.cpp)
+    app.cpp)
 
-target_link_libraries(iphone_photo_download PUBLIC ${USB_LIBRARIES})
-target_include_directories(iphone_photo_download PUBLIC ${USB_INCLUDE_DIRS})
+target_link_libraries(iphone_photo_download PUBLIC
+    ${Gphoto2_LIBRARIES}
+    ${Boost_LIBRARIES})
+
+target_include_directories(iphone_photo_download PUBLIC
+    ${GPHOTO2_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIR})

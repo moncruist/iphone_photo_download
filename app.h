@@ -13,34 +13,24 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#ifndef APP_H
+#define APP_H
 
-#include "usb_context.h"
+#include <gphoto2/gphoto2-context.h>
 
-#include <iostream>
+class App {
+public:
+    App();
+    ~App();
+    App(const App& other);
+    App(App&& other);
+    App& operator=(const App& other);
+    App& operator=(App&& other);
 
-UsbContext::UsbContext(bool debug) {
-    int ret = libusb_init(&ctx_);
-    if (ret < 0) {
-        std::cerr << "Failed to init USB context: " << libusb_error_name(ret) << std::endl;
-        ctx_ = nullptr;
-        return;
-    }
+    void print_device_list();
 
-    if (debug) {
-        libusb_set_option(ctx_, LIBUSB_OPTION_LOG_LEVEL, LIBUSB_LOG_LEVEL_DEBUG);
-    }
-}
+private:
+    GPContext* context {nullptr};
+};
 
-UsbContext::~UsbContext() {
-    if (ctx_) {
-        libusb_exit(ctx_);
-    }
-}
-
-std::optional<UsbDeviceList> UsbContext::enumerate_devices() const {
-    if (!ctx_) {
-        return std::nullopt;
-    }
-
-    return UsbDeviceList(*ctx_);
-}
+#endif // APP_H
