@@ -13,27 +13,26 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#ifndef APP_H
-#define APP_H
+#ifndef CONTEXT_H
+#define CONTEXT_H
 
-#include <cstdint>
+#include <gphoto2/gphoto2-context.h>
 
-#include <gphoto2/gphoto2-camera.h>
-#include <gphoto2/gphoto2.h>
-
-#include "context.h"
-
-class App {
+class Context
+{
 public:
-    void print_device_list();
-    void open_camera(std::size_t idx);
+    Context();
+    explicit Context(GPContext* context);
+    ~Context();
+    Context(const Context& other);
+    Context(Context&& other);
+    Context& operator=(const Context& other);
+    Context& operator=(Context&& other);
+
+    GPContext* get_context() const;
 
 private:
-    CameraList* autodetect_cameras() const;
-    Camera* open_camera(const char* model, const char* port) const;
-
-private:
-    Context context;
+    GPContext* context {nullptr};
 };
 
-#endif // APP_H
+#endif // CONTEXT_H

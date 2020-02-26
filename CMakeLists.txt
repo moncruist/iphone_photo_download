@@ -11,9 +11,11 @@ find_package(Boost COMPONENTS program_options REQUIRED)
 
 add_executable(iphone_photo_download
     app.h
+    context.h
 
-    main.cpp
-    app.cpp)
+    app.cpp
+    context.cpp
+    main.cpp)
 
 target_link_libraries(iphone_photo_download PUBLIC
     ${Gphoto2_LIBRARIES}
