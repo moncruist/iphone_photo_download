@@ -18,18 +18,17 @@
 
 #include <gphoto2/gphoto2-context.h>
 
-class Context
-{
+class Context {
 public:
-    Context();
-    explicit Context(GPContext* context);
+    Context() noexcept;
+    explicit Context(GPContext* context) noexcept;
     ~Context();
-    Context(const Context& other);
-    Context(Context&& other);
-    Context& operator=(const Context& other);
-    Context& operator=(Context&& other);
+    Context(const Context& other) noexcept;
+    Context(Context&& other) noexcept;
+    Context& operator=(const Context& other) noexcept;
+    Context& operator=(Context&& other) noexcept;
 
-    GPContext* get_context() const;
+    GPContext* get_context() const noexcept;
 
 private:
     GPContext* context {nullptr};
