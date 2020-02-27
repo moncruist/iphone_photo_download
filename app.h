@@ -26,7 +26,7 @@
 class App {
 public:
     void print_device_list();
-    void open_camera(std::size_t idx);
+    void open_camera(size_t idx);
 
 private:
     CameraList* autodetect_cameras() const;

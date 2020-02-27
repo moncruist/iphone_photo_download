@@ -28,7 +28,7 @@ void App::print_device_list() {
 }
 
 
-void App::open_camera(std::size_t idx) {
+void App::open_camera(size_t idx) {
     CameraList* list = autodetect_cameras();
 
     if (list == nullptr) {
