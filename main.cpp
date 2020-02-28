@@ -86,16 +86,21 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    App app;
+    try {
+        App app;
 
-    switch (options->command) {
-        case Command::LIST_DEVICES:
-            app.print_device_list();
-            break;
+        switch (options->command) {
+            case Command::LIST_DEVICES:
+                app.print_device_list();
+                break;
 
-        case Command::LIST_FILES:
-            app.open_camera(options->device_index);
-            break;
+            case Command::LIST_FILES:
+                app.open_camera(options->device_index);
+                break;
+        }
+    } catch (std::runtime_error& e) {
+        std::cerr << "Fatal error: " << e.what() << std::endl;
+        return 1;
     }
 
     return 0;
