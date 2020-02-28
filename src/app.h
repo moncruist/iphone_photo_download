@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <string>
+#include <filesystem>
 
 #include <gphoto2/gphoto2-camera.h>
 #include <gphoto2/gphoto2.h>
@@ -29,7 +30,7 @@ class App {
 public:
     App();
     void print_device_list();
-    void list_files(size_t idx, const std::string& path);
+    void list_files(size_t idx, const std::filesystem::path& path);
 
 private:
     CameraList* autodetect_cameras() const;

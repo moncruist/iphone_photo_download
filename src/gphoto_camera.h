@@ -21,6 +21,7 @@
 
 #include <vector>
 #include <string>
+#include <filesystem>
 
 class GPhotoCamera {
 public:
@@ -32,11 +33,11 @@ public:
     GPhotoCamera& operator=(const GPhotoCamera& other) noexcept;
     GPhotoCamera& operator=(GPhotoCamera&& other) noexcept;
 
-    std::vector<std::string> list_files(const std::string& path);
-    std::vector<std::string> list_folders(const std::string& path);
+    std::vector<std::filesystem::path> list_files(const std::filesystem::path& path);
+    std::vector<std::filesystem::path> list_folders(const std::filesystem::path& path);
 
 private:
-    std::vector<std::string> list_fs(bool folders, const std::string& path);
+    std::vector<std::filesystem::path> list_fs(bool folders, const std::filesystem::path& path);
 
     Context context; // For holding reference
     Camera* camera {nullptr};

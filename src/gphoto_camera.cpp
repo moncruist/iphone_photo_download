@@ -93,15 +93,15 @@ GPhotoCamera& GPhotoCamera::operator=(GPhotoCamera&& other) noexcept {
     return *this;
 }
 
-std::vector<std::string> GPhotoCamera::list_files(const std::string& path) {
+std::vector<std::filesystem::path> GPhotoCamera::list_files(const std::filesystem::path& path) {
     return list_fs(false, path);
 }
 
-std::vector<std::string> GPhotoCamera::list_folders(const std::string& path) {
+std::vector<std::filesystem::path> GPhotoCamera::list_folders(const std::filesystem::path& path) {
     return list_fs(true, path);
 }
 
-std::vector<std::string> GPhotoCamera::list_fs(bool folders, const std::string& path) {
+std::vector<std::filesystem::path> GPhotoCamera::list_fs(bool folders, const std::filesystem::path& path) {
     CameraList *list = nullptr;
     gp_list_new(&list);
 
@@ -125,13 +125,13 @@ std::vector<std::string> GPhotoCamera::list_fs(bool folders, const std::string& 
     }
 
     int fs_items_count = gp_list_count(list);
-    std::vector<std::string> result;
+    std::vector<std::filesystem::path> result;
     result.reserve(fs_items_count);
 
     for (int i = 0; i < fs_items_count; i++) {
         const char* item_name;
         gp_list_get_name(list, i, &item_name);
-        result.emplace_back(item_name);
+        result.emplace_back(path / item_name);
     }
 
     gp_list_free(list);

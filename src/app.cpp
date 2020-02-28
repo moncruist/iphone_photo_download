@@ -39,7 +39,7 @@ void App::print_device_list() {
 }
 
 
-void App::list_files(size_t idx, const std::string& path) {
+void App::list_files(size_t idx, const std::filesystem::path& path) {
     CameraList* list = autodetect_cameras();
 
     if (list == nullptr) {
@@ -64,10 +64,10 @@ void App::list_files(size_t idx, const std::string& path) {
         auto files = camera.list_files(path);
 
         for (const auto& folder : folders) {
-            std::cout << path << folder << "/" << std::endl;
+            std::cout << folder << std::endl;
         }
         for (const auto& file : files) {
-            std::cout << path << file << std::endl;
+            std::cout << file << std::endl;
         }
     } catch (std::runtime_error& e) {
         std::cerr << e.what() << std::endl;
