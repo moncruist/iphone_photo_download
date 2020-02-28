@@ -26,6 +26,7 @@ enum class Command { LIST_DEVICES, LIST_FILES };
 struct Options {
     Command command;
     int device_index;
+    std::filesystem::path path;
 };
 
 namespace {
@@ -42,14 +43,16 @@ std::optional<Options> parse_options(int argc, char* argv[]) {
     desc.add_options()
             ("command", po::value<std::string>()->required(), "Command")
             ("help", "produce help message")
-            ("device", po::value<int>()->default_value(0), "Device number");
+            ("device", po::value<int>()->default_value(0), "Device number")
+            ("subargs", po::value<std::vector<std::string> >(), "Arguments for command");
     // clang-format on
 
     po::positional_options_description positional;
-    positional.add("command", 1);
+    positional.add("command", 1).add("subargs", -1);
 
     po::variables_map vm;
-    po::parsed_options parsed = po::command_line_parser(argc, argv).options(desc).positional(positional).run();
+    po::parsed_options parsed =
+            po::command_line_parser(argc, argv).options(desc).positional(positional).allow_unregistered().run();
     po::store(parsed, vm);
 
 
@@ -73,9 +76,30 @@ std::optional<Options> parse_options(int argc, char* argv[]) {
         return std::nullopt;
     }
 
+    if (command == "list-files") {
+        po::options_description ls_desc("list-files options");
+        ls_desc.add_options()
+                ("path", po::value<std::string>()->required(), "Path to list");
+
+        po::positional_options_description list_files_positional;
+        list_files_positional.add("path", 1);
+
+        std::vector<std::string> opts = po::collect_unrecognized(parsed.options, po::include_positional);
+        opts.erase(opts.begin());
+
+        po::store(po::command_line_parser(opts).options(ls_desc).positional(list_files_positional).run(), vm);
+
+        po::notify(vm);
+    }
+
     po::notify(vm);
 
-    Options options {pos->second, vm["device"].as<int>()};
+    std::filesystem::path list_files_path;
+    if (vm.count("path") > 0) {
+        list_files_path = vm["path"].as<std::string>();
+    }
+
+    Options options {pos->second, vm["device"].as<int>(), list_files_path};
     return options;
 }
 
@@ -95,7 +119,7 @@ int main(int argc, char* argv[]) {
                 break;
 
             case Command::LIST_FILES:
-                app.list_files(options->device_index, "/");
+                app.list_files(options->device_index, options->path);
                 break;
         }
     } catch (std::runtime_error& e) {
