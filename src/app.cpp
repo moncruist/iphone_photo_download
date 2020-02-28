@@ -39,7 +39,7 @@ void App::print_device_list() {
 }
 
 
-void App::open_camera(size_t idx) {
+void App::list_files(size_t idx, const std::string& path) {
     CameraList* list = autodetect_cameras();
 
     if (list == nullptr) {
@@ -60,6 +60,15 @@ void App::open_camera(size_t idx) {
 
     try {
         GPhotoCamera camera(name, port, context, info);
+        auto folders = camera.list_folders(path);
+        auto files = camera.list_files(path);
+
+        for (const auto& folder : folders) {
+            std::cout << path << folder << "/" << std::endl;
+        }
+        for (const auto& file : files) {
+            std::cout << path << file << std::endl;
+        }
     } catch (std::runtime_error& e) {
         std::cerr << e.what() << std::endl;
     }

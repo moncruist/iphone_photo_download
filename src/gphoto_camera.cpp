@@ -81,6 +81,7 @@ GPhotoCamera& GPhotoCamera::operator=(const GPhotoCamera& other) noexcept {
     gp_camera_ref(camera);
     return *this;
 }
+
 GPhotoCamera& GPhotoCamera::operator=(GPhotoCamera&& other) noexcept {
     if (this == &other) {
         return *this;
@@ -90,4 +91,50 @@ GPhotoCamera& GPhotoCamera::operator=(GPhotoCamera&& other) noexcept {
     camera = other.camera;
     other.camera = nullptr;
     return *this;
+}
+
+std::vector<std::string> GPhotoCamera::list_files(const std::string& path) {
+    return list_fs(false, path);
+}
+
+std::vector<std::string> GPhotoCamera::list_folders(const std::string& path) {
+    return list_fs(true, path);
+}
+
+std::vector<std::string> GPhotoCamera::list_fs(bool folders, const std::string& path) {
+    CameraList *list = nullptr;
+    gp_list_new(&list);
+
+    int ret = 0;
+
+    if (folders) {
+        ret = gp_camera_folder_list_folders(camera, path.c_str(), list, context.get_context());
+    } else {
+        ret = gp_camera_folder_list_files(camera, path.c_str(), list, context.get_context());
+    }
+
+    if (ret < GP_OK) {
+        if (folders) {
+            std::cerr << "libgphoto2 gp_camera_folder_list_folders failed: ";
+        } else {
+            std::cerr << "libgphoto2 gp_camera_folder_list_files failed: ";
+        }
+        std::cerr << gp_result_as_string(ret) << std::endl;
+        gp_list_free(list);
+        return {};
+    }
+
+    int fs_items_count = gp_list_count(list);
+    std::vector<std::string> result;
+    result.reserve(fs_items_count);
+
+    for (int i = 0; i < fs_items_count; i++) {
+        const char* item_name;
+        gp_list_get_name(list, i, &item_name);
+        result.emplace_back(item_name);
+    }
+
+    gp_list_free(list);
+
+    return result;
 }

@@ -19,6 +19,9 @@
 #include "context.h"
 #include "gphoto_info.h"
 
+#include <vector>
+#include <string>
+
 class GPhotoCamera {
 public:
     GPhotoCamera(const char* model, const char* port, Context context, const GPhotoInfo& info);
@@ -29,9 +32,13 @@ public:
     GPhotoCamera& operator=(const GPhotoCamera& other) noexcept;
     GPhotoCamera& operator=(GPhotoCamera&& other) noexcept;
 
+    std::vector<std::string> list_files(const std::string& path);
+    std::vector<std::string> list_folders(const std::string& path);
 
 private:
-    Context context;
+    std::vector<std::string> list_fs(bool folders, const std::string& path);
+
+    Context context; // For holding reference
     Camera* camera {nullptr};
 };
 

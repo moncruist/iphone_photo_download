@@ -17,6 +17,7 @@
 #define IPHONE_PHOTO_DOWNLOAD_APP_H
 
 #include <cstdint>
+#include <string>
 
 #include <gphoto2/gphoto2-camera.h>
 #include <gphoto2/gphoto2.h>
@@ -28,7 +29,7 @@ class App {
 public:
     App();
     void print_device_list();
-    void open_camera(size_t idx);
+    void list_files(size_t idx, const std::string& path);
 
 private:
     CameraList* autodetect_cameras() const;

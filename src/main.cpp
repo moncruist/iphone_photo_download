@@ -95,7 +95,7 @@ int main(int argc, char* argv[]) {
                 break;
 
             case Command::LIST_FILES:
-                app.open_camera(options->device_index);
+                app.list_files(options->device_index, "/");
                 break;
         }
     } catch (std::runtime_error& e) {
