@@ -13,29 +13,27 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#ifndef IPHONE_PHOTO_DOWNLOAD_APP_H
-#define IPHONE_PHOTO_DOWNLOAD_APP_H
-
-#include <cstdint>
-
-#include <gphoto2/gphoto2-camera.h>
-#include <gphoto2/gphoto2.h>
+#ifndef IPHONE_PHOTO_DOWNLOAD_GPHOTO_CAMERA_H
+#define IPHONE_PHOTO_DOWNLOAD_GPHOTO_CAMERA_H
 
 #include "context.h"
 #include "gphoto_info.h"
 
-class App {
+class GPhotoCamera {
 public:
-    App();
-    void print_device_list();
-    void open_camera(size_t idx);
+    GPhotoCamera(const char* model, const char* port, Context context, const GPhotoInfo& info);
+    GPhotoCamera(const GPhotoCamera& other) noexcept;
+    GPhotoCamera(GPhotoCamera&& other) noexcept;
+    ~GPhotoCamera();
 
-private:
-    CameraList* autodetect_cameras() const;
+    GPhotoCamera& operator=(const GPhotoCamera& other) noexcept;
+    GPhotoCamera& operator=(GPhotoCamera&& other) noexcept;
+
 
 private:
     Context context;
-    GPhotoInfo info{context};
+    Camera* camera {nullptr};
 };
 
-#endif // IPHONE_PHOTO_DOWNLOAD_APP_H
+
+#endif // IPHONE_PHOTO_DOWNLOAD_GPHOTO_CAMERA_H

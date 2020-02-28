@@ -4,6 +4,8 @@
 #include <gphoto2/gphoto2.h>
 #include <iostream>
 
+#include "gphoto_camera.h"
+
 App::App() : info(context) {
     if (!info.load_cameras_abilities()) {
         throw std::runtime_error("Failed to load camera capabilities");
@@ -56,9 +58,12 @@ void App::open_camera(size_t idx) {
     gp_list_get_name(list, idx, &name);
     gp_list_get_value(list, idx, &port);
 
-    Camera* camera = open_camera(name, port);
+    try {
+        GPhotoCamera camera(name, port, context, info);
+    } catch (std::runtime_error& e) {
+        std::cerr << e.what() << std::endl;
+    }
     gp_list_free(list);
-    gp_camera_free(camera);
 }
 
 CameraList* App::autodetect_cameras() const {
@@ -72,52 +77,4 @@ CameraList* App::autodetect_cameras() const {
     }
 
     return list;
-}
-
-Camera* App::open_camera(const char* name, const char* port) const {
-    Camera* camera = nullptr;
-
-    GPPortInfoList* port_info_list = nullptr;
-    CameraAbilities camera_abilities;
-    int ret = GP_OK;
-    int m = 0;
-    int port_idx = 0;
-    GPPortInfo port_info;
-
-    ret = gp_camera_new(&camera);
-    if (ret < GP_OK) {
-        std::cerr << "libgphoto2 gp_camera_new failed: " << gp_result_as_string(ret) << std::endl;
-        goto fail;
-    }
-
-    if (!info.lookup_camera_ability(name, camera_abilities)) {
-        goto fail;
-    }
-
-    ret = gp_camera_set_abilities(camera, camera_abilities);
-    if (ret < GP_OK) {
-        std::cerr << "libgphoto2 gp_camera_set_abilities failed: " << gp_result_as_string(ret) << std::endl;
-        goto fail;
-    }
-
-    if (!info.lookup_port_path(port, port_info)) {
-        goto fail;
-    }
-
-    ret = gp_camera_set_port_info(camera, port_info);
-    if (ret < GP_OK) {
-        std::cerr << "libgphoto2 gp_camera_set_port_info failed: " << gp_result_as_string(ret) << std::endl;
-        goto fail;
-    }
-
-    gp_port_info_list_free(port_info_list);
-
-    return camera;
-
-fail:
-
-    if (camera != nullptr) {
-        gp_camera_free(camera);
-    }
-    return nullptr;
 }
