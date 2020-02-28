@@ -4,6 +4,15 @@
 #include <gphoto2/gphoto2.h>
 #include <iostream>
 
+App::App() : info(context) {
+    if (!info.load_cameras_abilities()) {
+        throw std::runtime_error("Failed to load camera capabilities");
+    }
+
+    if (!info.load_port_info()) {
+        throw std::runtime_error("Failed to load information about ports");
+    }
+}
 
 void App::print_device_list() {
     CameraList* list = autodetect_cameras();
@@ -66,8 +75,8 @@ CameraList* App::autodetect_cameras() const {
 }
 
 Camera* App::open_camera(const char* name, const char* port) const {
-    Camera *camera = nullptr;
-    CameraAbilitiesList* abilities = nullptr;
+    Camera* camera = nullptr;
+
     GPPortInfoList* port_info_list = nullptr;
     CameraAbilities camera_abilities;
     int ret = GP_OK;
@@ -81,29 +90,7 @@ Camera* App::open_camera(const char* name, const char* port) const {
         goto fail;
     }
 
-    /* Load all the camera drivers we have... */
-    ret = gp_abilities_list_new(&abilities);
-    if (ret < GP_OK) {
-        std::cerr << "libgphoto2 gp_abilities_list_new failed: " << gp_result_as_string(ret) << std::endl;
-        goto fail;
-    }
-
-    ret = gp_abilities_list_load(abilities, context.get_context());
-    if (ret < GP_OK) {
-        std::cerr << "libgphoto2 gp_abilities_list_load failed: " << gp_result_as_string(ret) << std::endl;
-        goto fail;
-    }
-
-    /* First lookup the model / driver */
-    m = gp_abilities_list_lookup_model(abilities, name);
-    if (m < GP_OK) {
-        std::cerr << "libgphoto2 gp_abilities_list_lookup_model failed: " << gp_result_as_string(ret) << std::endl;
-        goto fail;
-    }
-
-    ret = gp_abilities_list_get_abilities(abilities, m, &camera_abilities);
-    if (ret < GP_OK) {
-        std::cerr << "libgphoto2 gp_abilities_list_get_abilities failed: " << gp_result_as_string(ret) << std::endl;
+    if (!info.lookup_camera_ability(name, camera_abilities)) {
         goto fail;
     }
 
@@ -113,40 +100,7 @@ Camera* App::open_camera(const char* name, const char* port) const {
         goto fail;
     }
 
-    /* Load all the port drivers we have... */
-    ret = gp_port_info_list_new(&port_info_list);
-    if (ret < GP_OK) {
-        std::cerr << "libgphoto2 gp_port_info_list_new failed: " << gp_result_as_string(ret) << std::endl;
-        goto fail;
-    }
-
-    ret = gp_port_info_list_load(port_info_list);
-    if (ret < GP_OK) {
-        std::cerr << "libgphoto2 gp_port_info_list_load failed: " << gp_result_as_string(ret) << std::endl;
-        goto fail;
-    }
-
-    ret = gp_port_info_list_count(port_info_list);
-    if (ret < GP_OK) {
-        std::cerr << "libgphoto2 gp_port_info_list_count failed: " << gp_result_as_string(ret) << std::endl;
-        goto fail;
-    }
-
-    /* Then associate the camera with the specified port */
-    port_idx = gp_port_info_list_lookup_path(port_info_list, port);
-    if (port_idx < GP_OK) {
-        if (port_idx == GP_ERROR_UNKNOWN_PORT) {
-            std::cerr << "Cannot find port: " << port << std::endl;
-        } else {
-            std::cerr << "libgphoto2 gp_port_info_list_lookup_path failed: " << gp_result_as_string(port_idx)
-                      << std::endl;
-        }
-        goto fail;
-    }
-
-    ret = gp_port_info_list_get_info(port_info_list, port_idx, &port_info);
-    if (ret < GP_OK) {
-        std::cerr << "libgphoto2 gp_port_info_list_get_info failed: " << gp_result_as_string(ret) << std::endl;
+    if (!info.lookup_port_path(port, port_info)) {
         goto fail;
     }
 
@@ -157,18 +111,11 @@ Camera* App::open_camera(const char* name, const char* port) const {
     }
 
     gp_port_info_list_free(port_info_list);
-    gp_abilities_list_free(abilities);
 
     return camera;
 
 fail:
-    if (port_info_list != nullptr) {
-        gp_port_info_list_free(port_info_list);
-    }
 
-    if (abilities != nullptr) {
-        gp_abilities_list_free(abilities);
-    }
     if (camera != nullptr) {
         gp_camera_free(camera);
     }
