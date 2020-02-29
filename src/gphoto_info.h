@@ -20,6 +20,8 @@
 
 #include <gphoto2/gphoto2.h>
 
+#include <memory>
+
 class GPhotoInfo {
 public:
     explicit GPhotoInfo(Context context) noexcept;
@@ -38,8 +40,8 @@ public:
 
 private:
     Context context;
-    GPPortInfoList* port_info_list {nullptr};
-    CameraAbilitiesList* abilities {nullptr};
+    std::unique_ptr<GPPortInfoList, int(*)(GPPortInfoList*)> port_info_list;
+    std::unique_ptr<CameraAbilitiesList, int(*)(CameraAbilitiesList*)> abilities;
 };
 
 

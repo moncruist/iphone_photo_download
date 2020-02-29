@@ -17,50 +17,44 @@
 
 #include <iostream>
 
-GPhotoInfo::GPhotoInfo(Context context) noexcept : context(context) {}
+GPhotoInfo::GPhotoInfo(Context context) noexcept
+  : context(context), port_info_list(nullptr, gp_port_info_list_free), abilities(nullptr, gp_abilities_list_free) {}
 
-GPhotoInfo::~GPhotoInfo() {
-    if (port_info_list) {
-        gp_port_info_list_free(port_info_list);
-    }
-    if (abilities) {
-        gp_abilities_list_free(abilities);
-    }
-}
+GPhotoInfo::~GPhotoInfo() {}
 
 bool GPhotoInfo::load_port_info() noexcept {
-    if (port_info_list != nullptr) {
+    if (port_info_list) {
         // Don't load already loaded list
         return true;
     }
 
+    GPPortInfoList* list = nullptr;
     int ret = 0;
     /* Load all the port drivers we have... */
-    ret = gp_port_info_list_new(&port_info_list);
+    ret = gp_port_info_list_new(&list);
+
     if (ret < GP_OK) {
         std::cerr << "libgphoto2 gp_port_info_list_new failed: " << gp_result_as_string(ret) << std::endl;
-        goto fail;
+        return false;
     }
 
-    ret = gp_port_info_list_load(port_info_list);
+    port_info_list.reset(list);
+    list = nullptr;
+
+    ret = gp_port_info_list_load(port_info_list.get());
     if (ret < GP_OK) {
         std::cerr << "libgphoto2 gp_port_info_list_load failed: " << gp_result_as_string(ret) << std::endl;
-        goto fail;
+        port_info_list.reset();
+        return false;
     }
 
-    ret = gp_port_info_list_count(port_info_list);
+    ret = gp_port_info_list_count(port_info_list.get());
     if (ret < GP_OK) {
         std::cerr << "libgphoto2 gp_port_info_list_count failed: " << gp_result_as_string(ret) << std::endl;
-        goto fail;
+        port_info_list.reset();
+        return false;
     }
     return true;
-
-fail:
-    if (port_info_list != nullptr) {
-        gp_port_info_list_free(port_info_list);
-        port_info_list = nullptr;
-    }
-    return false;
 }
 
 bool GPhotoInfo::load_cameras_abilities() noexcept {
@@ -71,27 +65,25 @@ bool GPhotoInfo::load_cameras_abilities() noexcept {
         return true;
     }
 
+    CameraAbilitiesList* list = nullptr;
     /* Load all the camera drivers we have... */
-    ret = gp_abilities_list_new(&abilities);
+    ret = gp_abilities_list_new(&list);
     if (ret < GP_OK) {
         std::cerr << "libgphoto2 gp_abilities_list_new failed: " << gp_result_as_string(ret) << std::endl;
-        goto fail;
+        return false;
     }
 
-    ret = gp_abilities_list_load(abilities, context.get_context());
+    abilities.reset(list);
+    list = nullptr;
+
+    ret = gp_abilities_list_load(abilities.get(), context.get_context());
     if (ret < GP_OK) {
         std::cerr << "libgphoto2 gp_abilities_list_load failed: " << gp_result_as_string(ret) << std::endl;
-        goto fail;
+        abilities.reset();
+        return false;
     }
 
     return true;
-
-fail:
-    if (abilities != nullptr) {
-        gp_abilities_list_free(abilities);
-        abilities = nullptr;
-    }
-    return false;
 }
 
 bool GPhotoInfo::lookup_camera_ability(const char* model, CameraAbilities& abilities_out) const noexcept {
@@ -102,13 +94,13 @@ bool GPhotoInfo::lookup_camera_ability(const char* model, CameraAbilities& abili
     int m = 0, ret = 0;
 
     /* First lookup the model / driver */
-    m = gp_abilities_list_lookup_model(abilities, model);
+    m = gp_abilities_list_lookup_model(abilities.get(), model);
     if (m < GP_OK) {
         std::cerr << "libgphoto2 gp_abilities_list_lookup_model failed: " << gp_result_as_string(ret) << std::endl;
         return false;
     }
 
-    ret = gp_abilities_list_get_abilities(abilities, m, &abilities_out);
+    ret = gp_abilities_list_get_abilities(abilities.get(), m, &abilities_out);
     if (ret < GP_OK) {
         std::cerr << "libgphoto2 gp_abilities_list_get_abilities failed: " << gp_result_as_string(ret) << std::endl;
         return false;
@@ -118,12 +110,12 @@ bool GPhotoInfo::lookup_camera_ability(const char* model, CameraAbilities& abili
 }
 
 bool GPhotoInfo::lookup_port_path(const char* port, GPPortInfo& port_info) const noexcept {
-    if (port_info_list == nullptr) {
+    if (!port_info_list) {
         return false;
     }
 
     /* Then associate the camera with the specified port */
-    int port_idx = gp_port_info_list_lookup_path(port_info_list, port);
+    int port_idx = gp_port_info_list_lookup_path(port_info_list.get(), port);
     if (port_idx < GP_OK) {
         if (port_idx == GP_ERROR_UNKNOWN_PORT) {
             std::cerr << "Cannot find port: " << port << std::endl;
@@ -134,7 +126,7 @@ bool GPhotoInfo::lookup_port_path(const char* port, GPPortInfo& port_info) const
         return false;
     }
 
-    int ret = gp_port_info_list_get_info(port_info_list, port_idx, &port_info);
+    int ret = gp_port_info_list_get_info(port_info_list.get(), port_idx, &port_info);
     if (ret < GP_OK) {
         std::cerr << "libgphoto2 gp_port_info_list_get_info failed: " << gp_result_as_string(ret) << std::endl;
         return false;

@@ -40,7 +40,7 @@ private:
     std::vector<std::filesystem::path> list_fs(bool folders, const std::filesystem::path& path);
 
     Context context; // For holding reference
-    Camera* camera {nullptr};
+    std::shared_ptr<Camera> camera;
 };
 
 

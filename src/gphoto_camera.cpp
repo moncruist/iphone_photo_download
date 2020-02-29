@@ -16,38 +16,39 @@
 #include "gphoto_camera.h"
 
 #include <iostream>
+#include <memory>
 
 GPhotoCamera::GPhotoCamera(const char* model, const char* port, Context context, const GPhotoInfo& info)
-  : context(context) {
+  : context(context), camera(nullptr, gp_camera_free) {
     CameraAbilities camera_abilities;
     int ret = GP_OK;
     GPPortInfo port_info;
 
-    ret = gp_camera_new(&camera);
-    if (ret < GP_OK) {
-        throw std::runtime_error {std::string {"libgphoto2 gp_camera_new failed: "} + gp_result_as_string(ret)};
+    {
+        Camera* ptr = nullptr;
+        ret = gp_camera_new(&ptr);
+        if (ret < GP_OK) {
+            throw std::runtime_error {std::string {"libgphoto2 gp_camera_new failed: "} + gp_result_as_string(ret)};
+        }
+        camera.reset(ptr);
     }
 
     if (!info.lookup_camera_ability(model, camera_abilities)) {
-        gp_camera_free(camera);
         throw std::runtime_error {"Cannot find camera abilities"};
     }
 
-    ret = gp_camera_set_abilities(camera, camera_abilities);
+    ret = gp_camera_set_abilities(camera.get(), camera_abilities);
     if (ret < GP_OK) {
-        gp_camera_free(camera);
         throw std::runtime_error {std::string {"libgphoto2 gp_camera_set_abilities failed: "} +
                                   gp_result_as_string(ret)};
     }
 
     if (!info.lookup_port_path(port, port_info)) {
-        gp_camera_free(camera);
         throw std::runtime_error {"Cannot find port information"};
     }
 
-    ret = gp_camera_set_port_info(camera, port_info);
+    ret = gp_camera_set_port_info(camera.get(), port_info);
     if (ret < GP_OK) {
-        gp_camera_free(camera);
         throw std::runtime_error {std::string {"libgphoto2 gp_camera_set_port_info failed: "} +
                                   gp_result_as_string(ret)};
     }
@@ -56,7 +57,6 @@ GPhotoCamera::GPhotoCamera(const char* model, const char* port, Context context,
 GPhotoCamera::GPhotoCamera(const GPhotoCamera& other) noexcept {
     context = other.context;
     camera = other.camera;
-    gp_camera_ref(camera);
 }
 
 GPhotoCamera::GPhotoCamera(GPhotoCamera&& other) noexcept {
@@ -65,11 +65,7 @@ GPhotoCamera::GPhotoCamera(GPhotoCamera&& other) noexcept {
     other.camera = nullptr;
 }
 
-GPhotoCamera::~GPhotoCamera() {
-    if (camera) {
-        gp_camera_unref(camera);
-    }
-}
+GPhotoCamera::~GPhotoCamera() {}
 
 GPhotoCamera& GPhotoCamera::operator=(const GPhotoCamera& other) noexcept {
     if (this == &other) {
@@ -78,7 +74,6 @@ GPhotoCamera& GPhotoCamera::operator=(const GPhotoCamera& other) noexcept {
 
     context = other.context;
     camera = other.camera;
-    gp_camera_ref(camera);
     return *this;
 }
 
@@ -102,15 +97,21 @@ std::vector<std::filesystem::path> GPhotoCamera::list_folders(const std::filesys
 }
 
 std::vector<std::filesystem::path> GPhotoCamera::list_fs(bool folders, const std::filesystem::path& path) {
-    CameraList *list = nullptr;
-    gp_list_new(&list);
+    // For automatic clean up
+    std::unique_ptr<CameraList, int (*)(CameraList*)> plist(nullptr, gp_list_free);
+
+    {
+        CameraList* list = nullptr;
+        gp_list_new(&list);
+        plist.reset(list);
+    }
 
     int ret = 0;
 
     if (folders) {
-        ret = gp_camera_folder_list_folders(camera, path.c_str(), list, context.get_context());
+        ret = gp_camera_folder_list_folders(camera.get(), path.c_str(), plist.get(), context.get_context());
     } else {
-        ret = gp_camera_folder_list_files(camera, path.c_str(), list, context.get_context());
+        ret = gp_camera_folder_list_files(camera.get(), path.c_str(), plist.get(), context.get_context());
     }
 
     if (ret < GP_OK) {
@@ -120,21 +121,18 @@ std::vector<std::filesystem::path> GPhotoCamera::list_fs(bool folders, const std
             std::cerr << "libgphoto2 gp_camera_folder_list_files failed: ";
         }
         std::cerr << gp_result_as_string(ret) << std::endl;
-        gp_list_free(list);
         return {};
     }
 
-    int fs_items_count = gp_list_count(list);
+    int fs_items_count = gp_list_count(plist.get());
     std::vector<std::filesystem::path> result;
     result.reserve(fs_items_count);
 
     for (int i = 0; i < fs_items_count; i++) {
         const char* item_name;
-        gp_list_get_name(list, i, &item_name);
+        gp_list_get_name(plist.get(), i, &item_name);
         result.emplace_back(path / item_name);
     }
-
-    gp_list_free(list);
 
     return result;
 }
