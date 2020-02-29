@@ -88,15 +88,15 @@ GPhotoCamera& GPhotoCamera::operator=(GPhotoCamera&& other) noexcept {
     return *this;
 }
 
-std::vector<std::filesystem::path> GPhotoCamera::list_files(const std::filesystem::path& path) {
+std::vector<std::filesystem::path> GPhotoCamera::list_files(const std::filesystem::path& path) const {
     return list_fs(false, path);
 }
 
-std::vector<std::filesystem::path> GPhotoCamera::list_folders(const std::filesystem::path& path) {
+std::vector<std::filesystem::path> GPhotoCamera::list_folders(const std::filesystem::path& path) const {
     return list_fs(true, path);
 }
 
-std::vector<std::filesystem::path> GPhotoCamera::list_fs(bool folders, const std::filesystem::path& path) {
+std::vector<std::filesystem::path> GPhotoCamera::list_fs(bool folders, const std::filesystem::path& path) const {
     // For automatic clean up
     std::unique_ptr<CameraList, int (*)(CameraList*)> plist(nullptr, gp_list_free);
 

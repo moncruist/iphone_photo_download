@@ -33,11 +33,11 @@ public:
     GPhotoCamera& operator=(const GPhotoCamera& other) noexcept;
     GPhotoCamera& operator=(GPhotoCamera&& other) noexcept;
 
-    std::vector<std::filesystem::path> list_files(const std::filesystem::path& path);
-    std::vector<std::filesystem::path> list_folders(const std::filesystem::path& path);
+    std::vector<std::filesystem::path> list_files(const std::filesystem::path& path) const;
+    std::vector<std::filesystem::path> list_folders(const std::filesystem::path& path) const;
 
 private:
-    std::vector<std::filesystem::path> list_fs(bool folders, const std::filesystem::path& path);
+    std::vector<std::filesystem::path> list_fs(bool folders, const std::filesystem::path& path) const;
 
     Context context; // For holding reference
     std::shared_ptr<Camera> camera;

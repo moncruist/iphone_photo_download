@@ -25,15 +25,18 @@
 
 #include "context.h"
 #include "gphoto_info.h"
+#include "gphoto_camera.h"
 
 class App {
 public:
     App();
     void print_device_list();
-    void list_files(size_t idx, const std::filesystem::path& path);
+    void list_files(size_t idx, const std::filesystem::path& path, bool recursive);
 
 private:
     CameraList* autodetect_cameras() const;
+
+    void print_folder_structure(const GPhotoCamera& camera, const std::filesystem::path& path, bool recursive);
 
 private:
     Context context;

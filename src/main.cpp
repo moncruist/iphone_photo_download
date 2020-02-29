@@ -27,14 +27,18 @@ struct Options {
     Command command;
     int device_index;
     std::filesystem::path path;
+    bool recursive;
 };
 
 namespace {
 
-const std::pair<const char*, Command> SUPPORTED_COMMANDS[] = {{"list", Command::LIST_DEVICES},
-                                                              {"list-files", Command::LIST_FILES}};
+inline const char* LIST_DEVICES_COMMAND = "list";
+inline const char* LIST_FILES_COMMAND = "list-files";
 
-}
+const std::pair<const char*, Command> SUPPORTED_COMMANDS[] = {{LIST_DEVICES_COMMAND, Command::LIST_DEVICES},
+                                                              {LIST_FILES_COMMAND, Command::LIST_FILES}};
+
+} // namespace
 
 std::optional<Options> parse_options(int argc, char* argv[]) {
     po::options_description desc("All options");
@@ -76,10 +80,13 @@ std::optional<Options> parse_options(int argc, char* argv[]) {
         return std::nullopt;
     }
 
-    if (command == "list-files") {
+    if (command == LIST_FILES_COMMAND) {
         po::options_description ls_desc("list-files options");
+        // clang-format off
         ls_desc.add_options()
-                ("path", po::value<std::string>()->required(), "Path to list");
+            ("path", po::value<std::string>()->required(), "Path to list")
+            ("recursive,r", "Recursive listing");
+        // clang-format on
 
         po::positional_options_description list_files_positional;
         list_files_positional.add("path", 1);
@@ -99,7 +106,8 @@ std::optional<Options> parse_options(int argc, char* argv[]) {
         list_files_path = vm["path"].as<std::string>();
     }
 
-    Options options {pos->second, vm["device"].as<int>(), list_files_path};
+    bool recursive = vm.count("recursive") > 0;
+    Options options {pos->second, vm["device"].as<int>(), list_files_path, recursive};
     return options;
 }
 
@@ -119,7 +127,7 @@ int main(int argc, char* argv[]) {
                 break;
 
             case Command::LIST_FILES:
-                app.list_files(options->device_index, options->path);
+                app.list_files(options->device_index, options->path, options->recursive);
                 break;
         }
     } catch (std::runtime_error& e) {

@@ -39,7 +39,7 @@ void App::print_device_list() {
 }
 
 
-void App::list_files(size_t idx, const std::filesystem::path& path) {
+void App::list_files(size_t idx, const std::filesystem::path& path, bool recursive) {
     CameraList* list = autodetect_cameras();
 
     if (list == nullptr) {
@@ -60,15 +60,7 @@ void App::list_files(size_t idx, const std::filesystem::path& path) {
 
     try {
         GPhotoCamera camera(name, port, context, info);
-        auto folders = camera.list_folders(path);
-        auto files = camera.list_files(path);
-
-        for (const auto& folder : folders) {
-            std::cout << folder << std::endl;
-        }
-        for (const auto& file : files) {
-            std::cout << file << std::endl;
-        }
+        print_folder_structure(camera, path, recursive);
     } catch (std::runtime_error& e) {
         std::cerr << e.what() << std::endl;
     }
@@ -86,4 +78,20 @@ CameraList* App::autodetect_cameras() const {
     }
 
     return list;
+}
+
+void App::print_folder_structure(const GPhotoCamera& camera, const std::filesystem::path& path, bool recursive) {
+    auto folders = camera.list_folders(path);
+    auto files = camera.list_files(path);
+
+    for (const auto& folder : folders) {
+        if (recursive) {
+            print_folder_structure(camera, folder, true);
+        } else {
+            std::cout << folder << std::endl;
+        }
+    }
+    for (const auto& file : files) {
+        std::cout << file << std::endl;
+    }
 }
