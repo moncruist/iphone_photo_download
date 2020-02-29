@@ -19,7 +19,7 @@
 #include <memory>
 
 GPhotoCamera::GPhotoCamera(const char* model, const char* port, Context context, const GPhotoInfo& info)
-  : context(context), camera(nullptr, gp_camera_free) {
+  : context(context), camera(nullptr) {
     CameraAbilities camera_abilities;
     int ret = GP_OK;
     GPPortInfo port_info;
@@ -30,7 +30,7 @@ GPhotoCamera::GPhotoCamera(const char* model, const char* port, Context context,
         if (ret < GP_OK) {
             throw std::runtime_error {std::string {"libgphoto2 gp_camera_new failed: "} + gp_result_as_string(ret)};
         }
-        camera.reset(ptr);
+        camera = std::shared_ptr<Camera>(ptr, gp_camera_free);
     }
 
     if (!info.lookup_camera_ability(model, camera_abilities)) {
