@@ -36,6 +36,8 @@ public:
     std::vector<std::filesystem::path> list_files(const std::filesystem::path& path) const;
     std::vector<std::filesystem::path> list_folders(const std::filesystem::path& path) const;
 
+    bool get_file(const std::filesystem::path& file_path, const std::filesystem::path& destination_file) const;
+
 private:
     std::vector<std::filesystem::path> list_fs(bool folders, const std::filesystem::path& path) const;
 

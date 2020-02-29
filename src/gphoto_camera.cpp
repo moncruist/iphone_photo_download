@@ -15,8 +15,14 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "gphoto_camera.h"
 
+#include <cstring>
+#include <fcntl.h>
+#include <fstream>
 #include <iostream>
 #include <memory>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 GPhotoCamera::GPhotoCamera(const char* model, const char* port, Context context, const GPhotoInfo& info)
   : context(context), camera(nullptr) {
@@ -135,4 +141,42 @@ std::vector<std::filesystem::path> GPhotoCamera::list_fs(bool folders, const std
     }
 
     return result;
+}
+
+bool GPhotoCamera::get_file(const std::filesystem::path& file_path,
+                            const std::filesystem::path& destination_file) const {
+    int fd = open(destination_file.c_str(), O_CREAT | O_WRONLY, 0644);
+    if (fd < 0) {
+        std::cerr << "Can't create file " << destination_file << ": " << strerror(errno) << std::endl;
+        return false;
+    }
+
+    CameraFile* file = nullptr;
+
+    int ret = gp_file_new_from_fd(&file, fd);
+    if (ret < GP_OK) {
+        std::cerr << "libgphoto2 gp_file_new_from_fd failed: " << gp_result_as_string(ret) << std::endl;
+        close(fd);
+        return false;
+    }
+
+    auto parent = file_path.parent_path();
+    auto filename = file_path.filename();
+    ret = gp_camera_file_get(
+            camera.get(), parent.c_str(), filename.c_str(), GP_FILE_TYPE_NORMAL, file, context.get_context());
+
+    if (ret < GP_OK) {
+        std::cerr << "libgphoto2 gp_file_new_from_fd failed: " << gp_result_as_string(ret) << std::endl;
+
+        // remove output file
+        gp_file_free(file);
+        close(fd);
+        remove(destination_file.c_str());
+        return false;
+    }
+
+    gp_file_free(file);
+    close(fd);
+
+    return true;
 }

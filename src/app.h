@@ -33,10 +33,38 @@ public:
     void print_device_list();
     void list_files(size_t idx, const std::filesystem::path& path, bool recursive);
 
+    void download_files(size_t idx,
+                        const std::filesystem::path& source,
+                        const std::filesystem::path& destination,
+                        bool recursive);
+
 private:
     CameraList* autodetect_cameras() const;
 
+    GPhotoCamera open_camera(size_t idx);
+
     void print_folder_structure(const GPhotoCamera& camera, const std::filesystem::path& path, bool recursive);
+
+    void do_download_file(const GPhotoCamera& camera,
+                          const std::filesystem::path& source,
+                          const std::filesystem::path& destination);
+
+    void do_download_folder(const GPhotoCamera& camera,
+                            const std::filesystem::path& source,
+                            const std::filesystem::path& destination,
+                            bool recursive);
+
+    void dowload_folder_step(const GPhotoCamera& camera,
+                             const std::filesystem::path& source,
+                             const std::filesystem::path& destination,
+                             bool recursive);
+
+    void enumerate_files(const GPhotoCamera& camera,
+                         const std::filesystem::path& folder,
+                         std::vector<std::filesystem::path>& files,
+                         bool recursive);
+
+    void print_enumerating_files(size_t files_count, bool finish);
 
 private:
     Context context;
