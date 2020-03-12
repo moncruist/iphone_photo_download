@@ -1,4 +1,4 @@
-// iPhone photo download
+// phcopy
 // Copyright (C) 2020 Konstantin Zhukov
 //
 // This program is free software: you can redistribute it and/or modify

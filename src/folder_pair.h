@@ -1,4 +1,4 @@
-// iPhone photo download
+// phcopy
 // Copyright (C) 2020 Konstantin Zhukov
 //
 // This program is free software: you can redistribute it and/or modify
@@ -13,8 +13,8 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#ifndef IPHONE_PHOTO_DOWNLOAD_FOLDER_PAIR_H
-#define IPHONE_PHOTO_DOWNLOAD_FOLDER_PAIR_H
+#ifndef PHCOPY_FOLDER_PAIR_H
+#define PHCOPY_FOLDER_PAIR_H
 
 #include <filesystem>
 
@@ -26,4 +26,4 @@ struct FolderPair {
       : source(std::move(source)), destination(std::move(destination)) {}
 };
 
-#endif // IPHONE_PHOTO_DOWNLOAD_FOLDER_PAIR_H
+#endif // PHCOPY_FOLDER_PAIR_H

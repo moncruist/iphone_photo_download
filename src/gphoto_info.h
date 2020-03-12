@@ -1,4 +1,4 @@
-// iPhone photo download
+// phcopy
 // Copyright (C) 2020 Konstantin Zhukov
 //
 // This program is free software: you can redistribute it and/or modify
@@ -13,8 +13,8 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#ifndef IPHONE_PHOTO_DOWNLOAD_GPHOTO_INFO_H
-#define IPHONE_PHOTO_DOWNLOAD_GPHOTO_INFO_H
+#ifndef PHCOPY_GPHOTO_INFO_H
+#define PHCOPY_GPHOTO_INFO_H
 
 #include "context.h"
 
@@ -45,4 +45,4 @@ private:
 };
 
 
-#endif // IPHONE_PHOTO_DOWNLOAD_GPHOTO_INFO_H
+#endif // PHCOPY_GPHOTO_INFO_H

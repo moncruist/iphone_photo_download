@@ -1,4 +1,4 @@
-add_executable(iphone_photo_download
+add_executable(phcopy
     app.h
     context.h
     gphoto_camera.h
@@ -11,10 +11,10 @@ add_executable(iphone_photo_download
     gphoto_info.cpp
     main.cpp)
 
-target_link_libraries(iphone_photo_download PUBLIC
+target_link_libraries(phcopy PUBLIC
     ${Gphoto2_LIBRARIES}
     ${Boost_LIBRARIES})
 
-target_include_directories(iphone_photo_download PUBLIC
+target_include_directories(phcopy PUBLIC
     ${GPHOTO2_INCLUDE_DIR}
     ${Boost_INCLUDE_DIR})
