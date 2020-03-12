@@ -26,6 +26,7 @@
 #include "context.h"
 #include "gphoto_info.h"
 #include "gphoto_camera.h"
+#include "folder_pair.h"
 
 class App {
 public:
@@ -54,14 +55,10 @@ private:
                             const std::filesystem::path& destination,
                             bool recursive);
 
-    void dowload_folder_step(const GPhotoCamera& camera,
-                             const std::filesystem::path& source,
-                             const std::filesystem::path& destination,
-                             bool recursive);
-
     void enumerate_files(const GPhotoCamera& camera,
                          const std::filesystem::path& folder,
-                         std::vector<std::filesystem::path>& files,
+                         const std::filesystem::path& destination,
+                         std::vector<FolderPair>& files,
                          bool recursive);
 
     void print_enumerating_files(size_t files_count, bool finish);

@@ -1,12 +1,13 @@
 #include "app.h"
 
+#include "folder_pair.h"
 #include "gphoto_camera.h"
 
 #include <algorithm>
+#include <cstdio>
 #include <gphoto2/gphoto2-camera.h>
 #include <gphoto2/gphoto2.h>
 #include <iostream>
-#include <cstdio>
 
 App::App() : info(context) {
     if (!info.load_cameras_abilities()) {
@@ -79,7 +80,7 @@ void App::download_files(size_t idx,
             }
         } else {
             // source is definitely a folder
-            do_download_folder(camera, source, destination, true);
+            do_download_folder(camera, source, destination, recursive);
         }
     } catch (std::runtime_error& e) {
         std::cerr << e.what() << std::endl;
@@ -147,8 +148,9 @@ GPhotoCamera App::open_camera(size_t idx) {
 void App::do_download_file(const GPhotoCamera& camera,
                            const std::filesystem::path& source,
                            const std::filesystem::path& destination) {
-    std::cout << "Downloading " << source << "..." << std::flush;
-    bool result = camera.get_file(source, destination);
+    std::cout << "Downloading " << source << "... " << std::flush;
+    auto filename = source.filename();
+    bool result = camera.get_file(source, destination / filename);
 
     std::cout << (result ? "DONE" : "FAILED") << std::endl;
 }
@@ -157,40 +159,50 @@ void App::do_download_folder(const GPhotoCamera& camera,
                              const std::filesystem::path& source,
                              const std::filesystem::path& destination,
                              bool recursive) {
-    std::vector<std::filesystem::path> files;
+    std::vector<FolderPair> files;
+
+    if (!std::filesystem::exists(destination)) {
+        std::cerr << "Folder doesn't exist: " << destination << std::endl;
+        return;
+    }
 
     print_enumerating_files(files.size(), false);
-    enumerate_files(camera, source, files, recursive);
+    enumerate_files(camera, source, destination, files, recursive);
     print_enumerating_files(files.size(), true);
 
+    for (size_t i = 0; i < files.size(); i++) {
+        const FolderPair& file_task = files[i];
+        if (!std::filesystem::exists(file_task.destination)) {
+            std::filesystem::create_directories(file_task.destination);
+        }
 
+        std::cout << "[" << (i + 1) << "/" << files.size() << "]: ";
+        do_download_file(camera, file_task.source, file_task.destination);
+    }
 }
-
-void App::dowload_folder_step(const GPhotoCamera& camera,
-                              const std::filesystem::path& source,
-                              const std::filesystem::path& destination,
-                              bool recursive) {}
 
 void App::enumerate_files(const GPhotoCamera& camera,
                           const std::filesystem::path& folder,
-                          std::vector<std::filesystem::path>& files,
+                          const std::filesystem::path& destination,
+                          std::vector<FolderPair>& files,
                           bool recursive) {
     auto files_list = camera.list_files(folder);
     for (const auto& file_entry : files_list) {
-        files.push_back(file_entry);
+        files.emplace_back(file_entry, destination);
     }
 
     print_enumerating_files(files.size(), false);
     if (recursive) {
         auto folder_list = camera.list_folders(folder);
         for (const auto& dir : folder_list) {
-            enumerate_files(camera, dir, files, recursive);
+            auto dir_name = *(--dir.end());
+            enumerate_files(camera, dir, destination / dir_name, files, recursive);
         }
     }
 }
 
 void App::print_enumerating_files(size_t files_count, bool finish) {
-    std::cout << "\rEnumerating files: " <<  files_count << std::flush;
+    std::cout << "\rEnumerating files: " << files_count << std::flush;
     if (finish) {
         puts("\n");
     }

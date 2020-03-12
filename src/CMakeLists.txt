@@ -3,6 +3,7 @@ add_executable(iphone_photo_download
     context.h
     gphoto_camera.h
     gphoto_info.h
+    folder_pair.h
 
     app.cpp
     context.cpp
