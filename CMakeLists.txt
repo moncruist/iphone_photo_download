@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.13)
 project(iphone_photo_download)
 
 set(CMAKE_CXX_STANDARD 17)
