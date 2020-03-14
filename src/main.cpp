@@ -51,18 +51,41 @@ const std::pair<const char*, Command> SUPPORTED_COMMANDS[] = {{LIST_DEVICES_COMM
                                                               {LIST_FILES_COMMAND, Command::LIST_FILES},
                                                               {DOWNLOAD_FILES_COMMAND, Command::DOWNLOAD_FILES}};
 
+// clang-format off
+inline const char* HELP_STRING = ""
+"Usage: phcopy COMMAND [PARAMETER...]\n"
+"\n"
+"Commands:\n"
+"        list                          Display connected devices\n"
+"        list-files PATH               Display files on the device located in\n"
+"                                      the specific path\n"
+"        download SOURCE DESTINATION   Download files from SOURCE on\n"
+"                                      the device to DESTINATION\n"
+"                                      DESTINATION folder must exists\n"
+"\n"
+"Parameters:\n"
+"        -d, --device NUMBER           Use device NUMBER. Default is 0\n"
+"        -h, --help                    Print this help\n"
+"        -r, --recursive               Recursive traverse directories\n"
+"                                      (applies for list-files and\n"
+"                                      download commands)\n";
+// clang-format on
 } // namespace
+
+void print_help() {
+    std::cout << HELP_STRING << std::endl;
+}
 
 std::optional<Options> parse_options(int argc, char* argv[]) {
     po::options_description desc("All options");
 
     // clang-format off
     desc.add_options()
-            ("command", po::value<std::string>()->required(), "Command")
-            ("help", "produce help message")
-            ("device", po::value<int>()->default_value(0), "Device number")
-            ("subargs", po::value<std::vector<std::string> >(), "Arguments for command")
-            ("recursive,r", "Recursive listing");
+            ("command", po::value<std::string>()->required(), "")
+            ("help,h", "")
+            ("device,d", po::value<int>()->default_value(0), "")
+            ("subargs", po::value<std::vector<std::string> >(), "")
+            ("recursive,r", "");
     // clang-format on
 
     po::positional_options_description positional;
@@ -75,7 +98,7 @@ std::optional<Options> parse_options(int argc, char* argv[]) {
 
 
     if (vm.count("help")) {
-        std::cout << desc << std::endl;
+        print_help();
         return std::nullopt;
     }
 
@@ -108,6 +131,11 @@ std::optional<Options> parse_options(int argc, char* argv[]) {
         opts.erase(opts.begin());
 
         po::store(po::command_line_parser(opts).options(ls_desc).positional(list_files_positional).run(), vm);
+
+        if (vm.count("path") == 0) {
+            std::cerr << "Path is missing" << std::endl;
+            return std::nullopt;
+        }
     } else if (command == DOWNLOAD_FILES_COMMAND) {
         po::options_description ls_desc("download options");
         // clang-format off
@@ -124,9 +152,17 @@ std::optional<Options> parse_options(int argc, char* argv[]) {
         opts.erase(opts.begin());
 
         po::store(po::command_line_parser(opts).options(ls_desc).positional(list_files_positional).run(), vm);
-    }
 
-    po::notify(vm);
+        if (vm.count("path") == 0) {
+            std::cerr << "Path is missing" << std::endl;
+            return std::nullopt;
+        }
+
+        if (vm.count("destination") == 0) {
+            std::cerr << "Destination is missing" << std::endl;
+            return std::nullopt;
+        }
+    }
 
     std::filesystem::path path, destination;
     if (vm.count("path") > 0) {
