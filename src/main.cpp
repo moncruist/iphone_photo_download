@@ -27,16 +27,17 @@ enum class Command { LIST_DEVICES, LIST_FILES, DOWNLOAD_FILES };
 struct ListDevicesCommand {};
 
 struct ListFilesCommand {
-    int device_index;
+    int device_index {-1};
     std::filesystem::path path;
-    bool recursive;
+    bool recursive {false};
 };
 
 struct DownloadCommand {
-    int device_index;
+    int device_index {-1};
     std::filesystem::path source;
-    bool recursive;
     std::filesystem::path destination;
+    bool recursive {false};
+    bool skip {false};
 };
 
 using Options = std::variant<ListDevicesCommand, ListFilesCommand, DownloadCommand>;
@@ -68,7 +69,8 @@ inline const char* HELP_STRING = ""
 "        -h, --help                    Print this help\n"
 "        -r, --recursive               Recursive traverse directories\n"
 "                                      (applies for list-files and\n"
-"                                      download commands)\n";
+"                                      download commands)\n"
+"        -s, --skip                    Don't overwrite files\n";
 // clang-format on
 } // namespace
 
@@ -85,7 +87,8 @@ std::optional<Options> parse_options(int argc, char* argv[]) {
             ("help,h", "")
             ("device,d", po::value<int>()->default_value(0), "")
             ("subargs", po::value<std::vector<std::string> >(), "")
-            ("recursive,r", "");
+            ("recursive,r", "")
+            ("skip,s", "");
     // clang-format on
 
     po::positional_options_description positional;
@@ -174,13 +177,14 @@ std::optional<Options> parse_options(int argc, char* argv[]) {
     }
 
     bool recursive = vm.count("recursive") > 0;
+    bool skip = vm.count("skip") > 0;
 
     if (command == LIST_DEVICES_COMMAND) {
         return ListDevicesCommand {};
     } else if (command == LIST_FILES_COMMAND) {
         return ListFilesCommand {vm["device"].as<int>(), path, recursive};
     } else {
-        return DownloadCommand {vm["device"].as<int>(), path, recursive, destination};
+        return DownloadCommand {vm["device"].as<int>(), path, destination, recursive, skip};
     }
 }
 
@@ -208,7 +212,8 @@ int main(int argc, char* argv[]) {
                                    app.download_files(command.device_index,
                                                       command.source,
                                                       command.destination,
-                                                      command.recursive);
+                                                      command.recursive,
+                                                      command.skip);
                                }},
                    *options);
     } catch (std::runtime_error& e) {
