@@ -13,26 +13,28 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#include "app.h"
-
 #include <boost/program_options.hpp>
 #include <iomanip>
 #include <iostream>
 #include <variant>
 
+#include "download_command.h"
+#include "list_devices_command.h"
+#include "list_files_command.h"
+
 namespace po = boost::program_options;
 
-enum class Command { LIST_DEVICES, LIST_FILES, DOWNLOAD_FILES };
+enum class command { LIST_DEVICES, LIST_FILES, DOWNLOAD_FILES };
 
-struct ListDevicesCommand {};
+struct ListDevicesCommandParameters {};
 
-struct ListFilesCommand {
+struct ListFilesCommandParameters {
     int device_index {-1};
     std::filesystem::path path;
     bool recursive {false};
 };
 
-struct DownloadCommand {
+struct DownloadCommandParameters {
     int device_index {-1};
     std::filesystem::path source;
     std::filesystem::path destination;
@@ -40,7 +42,7 @@ struct DownloadCommand {
     bool skip {false};
 };
 
-using Options = std::variant<ListDevicesCommand, ListFilesCommand, DownloadCommand>;
+using Options = std::variant<ListDevicesCommandParameters, ListFilesCommandParameters, DownloadCommandParameters>;
 
 namespace {
 
@@ -48,9 +50,9 @@ inline const char* LIST_DEVICES_COMMAND = "list";
 inline const char* LIST_FILES_COMMAND = "list-files";
 inline const char* DOWNLOAD_FILES_COMMAND = "download";
 
-const std::pair<const char*, Command> SUPPORTED_COMMANDS[] = {{LIST_DEVICES_COMMAND, Command::LIST_DEVICES},
-                                                              {LIST_FILES_COMMAND, Command::LIST_FILES},
-                                                              {DOWNLOAD_FILES_COMMAND, Command::DOWNLOAD_FILES}};
+const std::pair<const char*, command> SUPPORTED_COMMANDS[] = {{LIST_DEVICES_COMMAND, command::LIST_DEVICES},
+                                                              {LIST_FILES_COMMAND, command::LIST_FILES},
+                                                              {DOWNLOAD_FILES_COMMAND, command::DOWNLOAD_FILES}};
 
 // clang-format off
 inline const char* HELP_STRING = ""
@@ -180,11 +182,11 @@ std::optional<Options> parse_options(int argc, char* argv[]) {
     bool skip = vm.count("skip") > 0;
 
     if (command == LIST_DEVICES_COMMAND) {
-        return ListDevicesCommand {};
+        return ListDevicesCommandParameters {};
     } else if (command == LIST_FILES_COMMAND) {
-        return ListFilesCommand {vm["device"].as<int>(), path, recursive};
+        return ListFilesCommandParameters {vm["device"].as<int>(), path, recursive};
     } else {
-        return DownloadCommand {vm["device"].as<int>(), path, destination, recursive, skip};
+        return DownloadCommandParameters {vm["device"].as<int>(), path, destination, recursive, skip};
     }
 }
 
@@ -202,18 +204,18 @@ int main(int argc, char* argv[]) {
     }
 
     try {
-        App app;
-
-        std::visit(overloaded {[&](const ListDevicesCommand&) { app.print_device_list(); },
-                               [&](const ListFilesCommand& command) {
-                                   app.list_files(command.device_index, command.path, command.recursive);
+        std::visit(overloaded {[&](const ListDevicesCommandParameters&) { ListDevicesCommand().execute(); },
+                               [&](const ListFilesCommandParameters& params) {
+                                   auto command = ListFilesCommand(params.device_index, params.path, params.recursive);
+                                   command.execute();
                                },
-                               [&](const DownloadCommand& command) {
-                                   app.download_files(command.device_index,
-                                                      command.source,
-                                                      command.destination,
-                                                      command.recursive,
-                                                      command.skip);
+                               [&](const DownloadCommandParameters& params) {
+                                   auto command = DownloadCommand(params.device_index,
+                                                                  params.source,
+                                                                  params.destination,
+                                                                  params.recursive,
+                                                                  params.skip);
+                                   command.execute();
                                }},
                    *options);
     } catch (std::runtime_error& e) {

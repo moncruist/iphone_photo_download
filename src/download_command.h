@@ -13,40 +13,27 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#ifndef PHCOPY_APP_H
-#define PHCOPY_APP_H
+#ifndef PHCOPY_DOWNLOAD_COMMAND_H
+#define PHCOPY_DOWNLOAD_COMMAND_H
 
-#include <cstdint>
-#include <string>
+#include "command.h"
+
 #include <filesystem>
+#include <vector>
 
-#include <gphoto2/gphoto2-camera.h>
-#include <gphoto2/gphoto2.h>
-
-#include "context.h"
-#include "gphoto_info.h"
-#include "gphoto_camera.h"
 #include "folder_pair.h"
 
-class App {
+class DownloadCommand : public Command {
 public:
-    App();
-    void print_device_list();
-    void list_files(size_t idx, const std::filesystem::path& path, bool recursive);
+    DownloadCommand(size_t device_idx,
+                    std::filesystem::path source,
+                    std::filesystem::path destination,
+                    bool recursive,
+                    bool skip_existing);
 
-    void download_files(size_t idx,
-                        const std::filesystem::path& source,
-                        const std::filesystem::path& destination,
-                        bool recursive,
-                        bool skip_existing);
+    void execute() override;
 
 private:
-    CameraList* autodetect_cameras() const;
-
-    GPhotoCamera open_camera(size_t idx);
-
-    void print_folder_structure(const GPhotoCamera& camera, const std::filesystem::path& path, bool recursive);
-
     void do_download_file(const GPhotoCamera& camera,
                           const std::filesystem::path& source,
                           const std::filesystem::path& destination,
@@ -67,9 +54,12 @@ private:
 
     void print_enumerating_files(size_t files_count, bool finish);
 
-private:
-    Context context;
-    GPhotoInfo info{context};
+    size_t device_idx;
+    std::filesystem::path source;
+    std::filesystem::path destination;
+    bool recursive;
+    bool skip_existing;
 };
 
-#endif // PHCOPY_APP_H
+
+#endif // PHCOPY_DOWNLOAD_COMMAND_H
