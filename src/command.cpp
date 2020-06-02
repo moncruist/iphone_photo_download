@@ -19,7 +19,9 @@
 
 Command::Command() : info(context) {}
 
-void Command::execute() {}
+void Command::execute() {
+    load_camera_info();
+}
 
 void Command::load_camera_info() {
     if (!info.load_cameras_abilities()) {

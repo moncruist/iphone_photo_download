@@ -22,6 +22,8 @@ ListFilesCommand::ListFilesCommand(size_t device_idx, std::filesystem::path path
 
 void ListFilesCommand::execute() {
     try {
+        Command::execute();
+
         GPhotoCamera camera = open_camera(device_idx);
         print_folder_structure(camera, path, recursive);
     } catch (std::runtime_error& e) {

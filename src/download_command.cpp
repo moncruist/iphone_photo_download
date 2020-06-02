@@ -30,6 +30,8 @@ DownloadCommand::DownloadCommand(size_t device_idx,
 
 void DownloadCommand::execute() {
     try {
+        Command::execute();
+
         GPhotoCamera camera = open_camera(device_idx);
         if (source.has_filename()) {
             // might be the file

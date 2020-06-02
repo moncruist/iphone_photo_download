@@ -18,6 +18,8 @@
 #include <iostream>
 
 void ListDevicesCommand::execute() {
+    Command::execute();
+    
     CameraList* list = autodetect_cameras();
 
     if (list == nullptr) {

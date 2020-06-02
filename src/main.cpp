@@ -13,14 +13,14 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#include "download_command.h"
+#include "list_devices_command.h"
+#include "list_files_command.h"
+
 #include <boost/program_options.hpp>
 #include <iomanip>
 #include <iostream>
 #include <variant>
-
-#include "download_command.h"
-#include "list_devices_command.h"
-#include "list_files_command.h"
 
 namespace po = boost::program_options;
 
@@ -195,7 +195,7 @@ struct overloaded : Ts... {
     using Ts::operator()...;
 };
 template<class... Ts>
-overloaded(Ts...)->overloaded<Ts...>;
+overloaded(Ts...) -> overloaded<Ts...>;
 
 int main(int argc, char* argv[]) {
     std::optional<Options> options = parse_options(argc, argv);
@@ -204,20 +204,25 @@ int main(int argc, char* argv[]) {
     }
 
     try {
-        std::visit(overloaded {[&](const ListDevicesCommandParameters&) { ListDevicesCommand().execute(); },
+        std::unique_ptr<Command> command;
+        std::visit(overloaded {[&](const ListDevicesCommandParameters&) {
+                                   command = std::make_unique<ListDevicesCommand>();
+                               },
                                [&](const ListFilesCommandParameters& params) {
-                                   auto command = ListFilesCommand(params.device_index, params.path, params.recursive);
-                                   command.execute();
+                                   command = std::make_unique<ListFilesCommand>(
+                                           params.device_index, params.path, params.recursive);
                                },
                                [&](const DownloadCommandParameters& params) {
-                                   auto command = DownloadCommand(params.device_index,
-                                                                  params.source,
-                                                                  params.destination,
-                                                                  params.recursive,
-                                                                  params.skip);
-                                   command.execute();
+                                   command = std::make_unique<DownloadCommand>(params.device_index,
+                                                                               params.source,
+                                                                               params.destination,
+                                                                               params.recursive,
+                                                                               params.skip);
                                }},
                    *options);
+        if (command) {
+            command->execute();
+        }
     } catch (std::runtime_error& e) {
         std::cerr << "Fatal error: " << e.what() << std::endl;
         return 1;
