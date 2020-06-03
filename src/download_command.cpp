@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "download_command.h"
 
+#include <algorithm>
 #include <iostream>
 
 DownloadCommand::DownloadCommand(size_t device_idx,
