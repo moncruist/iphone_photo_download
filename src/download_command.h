@@ -35,24 +35,19 @@ public:
 
 private:
     void do_download_file(const GPhotoCamera& camera,
-                          const std::filesystem::path& source,
-                          const std::filesystem::path& destination,
-                          bool skip_existing);
+                          const std::filesystem::path& src,
+                          const std::filesystem::path& dst) const;
 
     void do_download_folder(const GPhotoCamera& camera,
-                            const std::filesystem::path& source,
-                            const std::filesystem::path& destination,
-                            bool recursive,
-                            bool skip_existing);
+                            const std::filesystem::path& src,
+                            const std::filesystem::path& dst) const;
 
     void enumerate_files(const GPhotoCamera& camera,
                          const std::filesystem::path& folder,
-                         const std::filesystem::path& destination,
-                         std::vector<FolderPair>& files,
-                         bool recursive,
-                         bool skip_existing);
+                         const std::filesystem::path& dst,
+                         std::vector<FolderPair>& files) const;
 
-    void print_enumerating_files(size_t files_count, bool finish);
+    static void print_enumerating_files(size_t files_count, bool finish);
 
     size_t device_idx;
     std::filesystem::path source;
