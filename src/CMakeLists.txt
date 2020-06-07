@@ -19,7 +19,8 @@ add_executable(phcopy
 
 target_link_libraries(phcopy PUBLIC
     ${Gphoto2_LIBRARIES}
-    ${Boost_LIBRARIES})
+    ${Boost_LIBRARIES}
+    LibMTP::LibMTP)
 
 target_include_directories(phcopy PUBLIC
     ${GPHOTO2_INCLUDE_DIR}
